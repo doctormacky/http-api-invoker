@@ -1,6 +1,6 @@
 package com.github.dadiyang.httpinvoker.requestor;
 
-import com.alibaba.fastjson.JSON;
+import com.github.dadiyang.httpinvoker.serializer.JsonSerializerDecider;
 import com.github.dadiyang.httpinvoker.util.ObjectUtils;
 import com.github.dadiyang.httpinvoker.util.ParamUtils;
 import com.github.dadiyang.httpinvoker.util.StringUtils;
@@ -21,6 +21,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +41,18 @@ public class HttpClientRequestor implements Requestor {
     private static final String CONTENT_TYPE = "Content-Type";
     private CloseableHttpClient httpClient;
 
-    public HttpClientRequestor(CloseableHttpClient httpClient) {
-        this.httpClient = httpClient;
-    }
-
+    /**
+     * 使用默认的 httpClient 实现和配置
+     */
     public HttpClientRequestor() {
         httpClient = createHttpClient();
+    }
+
+    /**
+     * 自定义配置 httpClient
+     */
+    public HttpClientRequestor(CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     private CloseableHttpClient createHttpClient() {
@@ -149,7 +156,6 @@ public class HttpClientRequestor implements Requestor {
         return sendRequest(request, httpPost);
     }
 
-
     private HttpEntity createHttpEntity(HttpRequest request) throws IOException {
         HttpEntity entity;
         // handle x-www-form-urlencoded
@@ -163,10 +169,10 @@ public class HttpClientRequestor implements Requestor {
             entity = new UrlEncodedFormEntity(parameters, "UTF-8");
         } else {
             if (request.getBody() != null) {
-                entity = new ByteArrayEntity(JSON.toJSONBytes(request.getBody()),
+                entity = new ByteArrayEntity(JsonSerializerDecider.getJsonSerializer().serialize(request.getBody()).getBytes(Charset.forName("UTF-8")),
                         ContentType.create(APPLICATION_JSON, "UTF-8"));
             } else if (request.getData() != null) {
-                entity = new ByteArrayEntity(JSON.toJSONBytes(request.getData()),
+                entity = new ByteArrayEntity(JsonSerializerDecider.getJsonSerializer().serialize(request.getData()).getBytes(Charset.forName("UTF-8")),
                         ContentType.create(APPLICATION_JSON, "UTF-8"));
             } else {
                 BasicHttpEntity basicHttpEntity = new BasicHttpEntity();
@@ -237,5 +243,13 @@ public class HttpClientRequestor implements Requestor {
                 msg.addHeader(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    public CloseableHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public void setHttpClient(CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 }

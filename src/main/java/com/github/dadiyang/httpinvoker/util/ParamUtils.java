@@ -1,10 +1,8 @@
 package com.github.dadiyang.httpinvoker.util;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.github.dadiyang.httpinvoker.requestor.HttpRequest;
 import com.github.dadiyang.httpinvoker.requestor.MultiPart;
+import com.github.dadiyang.httpinvoker.serializer.JsonSerializerDecider;
 
 import java.io.*;
 import java.lang.reflect.Array;
@@ -108,7 +106,7 @@ public class ParamUtils {
                 }
             }
         } else {
-            JSONObject obj = JSON.parseObject(JSON.toJSONString(value));
+            Map<String, Object> obj = JsonSerializerDecider.getJsonSerializer().toMap(JsonSerializerDecider.getJsonSerializer().serialize(value));
             for (Map.Entry<String, Object> entry : obj.entrySet()) {
                 String key;
                 if (prefix == null || prefix.isEmpty()) {
@@ -139,7 +137,7 @@ public class ParamUtils {
             return "";
         }
         StringBuilder qs = new StringBuilder("?");
-        JSONObject obj = JSON.parseObject(JSON.toJSONString(arg));
+        Map<String, Object> obj = JsonSerializerDecider.getJsonSerializer().toMap(JsonSerializerDecider.getJsonSerializer().serialize(arg));
         for (Map.Entry<String, Object> entry : obj.entrySet()) {
             if (isCollection(entry.getValue())) {
                 qs.append(collectionToQueryString(obj, entry));
@@ -155,8 +153,8 @@ public class ParamUtils {
         return qs.substring(0, qs.length() - 1);
     }
 
-    private static String collectionToQueryString(JSONObject obj, Map.Entry<String, Object> entry) {
-        JSONArray arr = obj.getJSONArray(entry.getKey());
+    private static String collectionToQueryString(Map<String, Object> obj, Map.Entry<String, Object> entry) {
+        List<Object> arr = JsonSerializerDecider.getJsonSerializer().parseArray(ObjectUtils.toString(obj.get(entry.getKey())));
         StringBuilder valBuilder = new StringBuilder();
         for (Object item : arr) {
             valBuilder.append(entry.getKey()).append("=").append(item).append("&");

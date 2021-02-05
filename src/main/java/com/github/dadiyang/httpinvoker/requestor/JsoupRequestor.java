@@ -1,6 +1,6 @@
 package com.github.dadiyang.httpinvoker.requestor;
 
-import com.alibaba.fastjson.JSON;
+import com.github.dadiyang.httpinvoker.serializer.JsonSerializerDecider;
 import com.github.dadiyang.httpinvoker.util.ObjectUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -71,7 +71,7 @@ public class JsoupRequestor implements Requestor {
                     response = uploadFile(request);
                 } else {
                     if (useJson(request, bodyParam)) {
-                        response = conn.requestBody(JSON.toJSONString(bodyParam)).execute();
+                        response = conn.requestBody(JsonSerializerDecider.getJsonSerializer().serialize(bodyParam)).execute();
                     } else {
                         Map<String, String> map = toMapStringString(bodyParam, "");
                         response = conn.data(map).execute();
@@ -87,7 +87,7 @@ public class JsoupRequestor implements Requestor {
                         // use X-HTTP-Method-Override header to send a fake PATCH request
                         conn.method(Method.POST).header("X-HTTP-Method-Override", "PATCH");
                     }
-                    response = conn.requestBody(JSON.toJSONString(data)).execute();
+                    response = conn.requestBody(JsonSerializerDecider.getJsonSerializer().serialize(data)).execute();
                 } else {
                     Map<String, String> map = toMapStringString(data, "");
                     response = conn.data(map).execute();
